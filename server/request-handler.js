@@ -40,7 +40,7 @@ var requestHandler = function(request, response) {
   if (request.method === 'POST') {
     statusCode = 201;
   }
-
+  
   // See the note below about CORS headers.
   var headers = defaultCorsHeaders;
 
@@ -49,6 +49,13 @@ var requestHandler = function(request, response) {
   // You will need to change this if you are sending something
   // other than plain text, like JSON or HTML.
   headers['Content-Type'] = 'text/plain';
+  
+  request.on('data', (data) => {
+    console.log('data', data);
+    responseObj.results.push('test');
+  });
+
+  console.log('results', responseObj.results);
 
   // .writeHead() writes to the request line and headers of the response,
   // which includes the status and all headers.
