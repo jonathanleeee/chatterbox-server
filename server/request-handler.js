@@ -11,14 +11,16 @@ this file and include it in basic-server.js so that it actually works.
 *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
 
 **************************************************************/
+const querystring = require('querystring');
+
 var defaultCorsHeaders = {
   'access-control-allow-origin': '*',
   'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
   'access-control-allow-headers': 'content-type, accept',
   'access-control-max-age': 10 // Seconds.
 };
-
-var responseObj = {results: []};
+var time = new Date();
+var responseObj = {results: [{username: 'john', text: 'aaaa', roomname: 'lobby', createdAt: time}]};
 
 var requestHandler = function(request, response) {
   var headers = defaultCorsHeaders;
@@ -39,30 +41,32 @@ var requestHandler = function(request, response) {
   // console.logs in your code.
   //console.log('request', request);
   console.log('Serving request type ' + request.method + ' for url ' + request.url); 
-
+  
+  
   if (request.method === 'OPTIONS') {
     response.writeHead(200, headers);
-    response.end('{results: ["test"]}');
+    response.end(JSON.stringify({results: ['test']}));
   }
 
   if (request.method === 'GET') {
     response.writeHead(200, headers);
     var id = Math.floor(Math.random() * 100);
-    response.end(JSON.stringify({results: [{roomname: 'lobby', username: 'alex', text: 'hi', objectId: id}]}));
+    response.end(JSON.stringify(responseObj));
   }
 
   if (request.method === 'POST') {
-    statusCode = 201;
     var messageData = [];
     request.on('data', (data) => {
       messageData.push(data);
-      console.log('rO', responseObj);
     }).on('end', () => {
-      responseObj.results.push(Buffer.concat(messageData).toString());
-      console.log('results:', responseObj.results);
+      var messageObj = Buffer.concat(messageData).toString();
+      messageObj = querystring.parse(messageObj);
+      messageObj.createAt = new Date();
+      messageObj.objectId = Math.floor(Math.random() * 100);
+      responseObj.results.push(messageObj);
 
       response.writeHead(201, headers);
-      response.end();
+      response.end(JSON.stringify(responseObj));
     });
   }
 
