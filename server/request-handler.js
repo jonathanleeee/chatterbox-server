@@ -11,8 +11,18 @@ this file and include it in basic-server.js so that it actually works.
 *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
 
 **************************************************************/
+var defaultCorsHeaders = {
+  'access-control-allow-origin': '*',
+  'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'access-control-allow-headers': 'content-type, accept',
+  'access-control-max-age': 10 // Seconds.
+};
+
+var responseObj = {results: []};
 
 var requestHandler = function(request, response) {
+  var headers = defaultCorsHeaders;
+  headers['Content-Type'] = 'application/json';
   // Request and Response come from node's http module.
   //
   // They include information about both the incoming request, such as
@@ -28,38 +38,63 @@ var requestHandler = function(request, response) {
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
   //console.log('request', request);
+  console.log('Serving request type ' + request.method + ' for url ' + request.url); 
 
-  console.log('Serving request type ' + request.method + ' for url ' + request.url);
+  if (request.method === 'OPTIONS') {
+    response.writeHead(200, headers);
+    response.end('{results: ["test"]}');
+  }
 
-  // The outgoing status.
-  var statusCode = 200;
-  var responseObj = {
-    results: []
-  };
+  if (request.method === 'GET') {
+    response.writeHead(200, headers);
+    var id = Math.floor(Math.random() * 100);
+    response.end(JSON.stringify({results: [{roomname: 'lobby', username: 'alex', text: 'hi', objectId: id}]}));
+  }
 
   if (request.method === 'POST') {
     statusCode = 201;
+    var messageData = [];
+    request.on('data', (data) => {
+      messageData.push(data);
+      console.log('rO', responseObj);
+    }).on('end', () => {
+      responseObj.results.push(Buffer.concat(messageData).toString());
+      console.log('results:', responseObj.results);
+
+      response.writeHead(201, headers);
+      response.end();
+    });
   }
+
+  // The outgoing status.
+  // var statusCode = 200;
+  // var responseObj = {
+  //   results: []
+  // };
+
+  // if (request.method === 'POST') {
+  //   statusCode = 201;
+  //   request.on('data', (data) => {
+  //     //console.log('data', data);
+  //     responseObj.results.push(data);
+  //   }).on('end', () => {
+  //     responseObj.results = Buffer.concat(responseObj.results).toString();
+  //     console.log('results:', responseObj.results);
+  //   });
+  // }
   
   // See the note below about CORS headers.
-  var headers = defaultCorsHeaders;
 
   // Tell the client we are sending them plain text.
   //
   // You will need to change this if you are sending something
   // other than plain text, like JSON or HTML.
-  headers['Content-Type'] = 'text/plain';
-  
-  request.on('data', (data) => {
-    console.log('data', data);
-    responseObj.results.push('test');
-  });
 
-  console.log('results', responseObj.results);
+  // console.log('results', responseObj.results);
 
   // .writeHead() writes to the request line and headers of the response,
   // which includes the status and all headers.
-  response.writeHead(statusCode, headers);
+  //response.writeHead(statusCode, headers);
 
   // Make sure to always call response.end() - Node may not send
   // anything back to the client until you do. The string you pass to
@@ -68,7 +103,7 @@ var requestHandler = function(request, response) {
   //
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
-  response.end(JSON.stringify(responseObj));
+  //response.end(JSON.stringify(responseObj));
 };
 
 // These headers will allow Cross-Origin Resource Sharing (CORS).
@@ -80,12 +115,6 @@ var requestHandler = function(request, response) {
 //
 // Another way to get around this restriction is to serve you chat
 // client from this domain by setting up static file serving.
-var defaultCorsHeaders = {
-  'access-control-allow-origin': '*',
-  'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'access-control-allow-headers': 'content-type, accept',
-  'access-control-max-age': 10 // Seconds.
-};
 
 exports.requestHandler = requestHandler;
 

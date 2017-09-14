@@ -1,0 +1,21 @@
+{
+  "name": "chatterbox-server",
+  "description": "Implement a chat server",
+  "main": "",
+  "authors": [
+    "Hack Reactor <curriculum.team@hackreactor.com>"
+  ],
+  "license": "UNLICENSED",
+  "homepage": "https://github.com/arsimr16/hrsf81-chatterbox-server",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "client/bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "^3.2.1"
+  }
+}
